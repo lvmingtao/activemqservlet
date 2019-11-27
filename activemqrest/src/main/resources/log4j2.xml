@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration monitorInterval="30">
+	<properties>
+		<property name="LOG_HOME">../../logs</property>
+		<property name="Seq">1</property>
+		<property name="PATTERN_LAYOUT">%d [%20X{MES.MSGNAME}] [%20X{MES.TRXID}][%-5p] [%t] %C{2} (%F:%L) - %m%n</property>
+	</properties>
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout  pattern="${PATTERN_LAYOUT}" />
+		</Console>
+		<!-- name: 指定appender的名字 fileName：日志存储路径 filePattern：历史日志封存路径, 当发生Rolling时，文件的转移和重命名规则。 -->
+		<RollingRandomAccessFile name="file"
+			fileName="${LOG_HOME}/${Seq}"
+			filePattern="${LOG_HOME}/%d{yyyyMMdd}/${Seq}_%d{yyyyMMddHH}_%i.log">
+
+			<PatternLayout  pattern="${PATTERN_LAYOUT}" />
+
+			<Policies>
+				<!-- interval:表示历史日志封存间隔时间，单位为filePattern设置的单位值 -->
+				<TimeBasedTriggeringPolicy interval="1" />
+				<!-- 指定当文件体积大于size值时，触发Rolling -->
+				<SizeBasedTriggeringPolicy size="40M" />
+			</Policies>
+
+			<!-- 指定了当触发rollover时的默认策略 -->
+			<!-- max参数是与filePattern中的计数器%i配合才起作用 -->
+			<DefaultRolloverStrategy max="7" />
+		</RollingRandomAccessFile>
+		<Async name="AsyncFile">
+			<AppenderRef ref="file" />
+		</Async>
+		<RollingRandomAccessFile name="error"
+			fileName="${LOG_HOME}/${Seq}_Error"
+			filePattern="${LOG_HOME}/%d{yyyyMMdd}/${Seq}_Error_%d{yyyyMMdd}_%i.log">
+			<Filters>
+				<ThresholdFilter level="ERROR" />
+			</Filters>
+			<PatternLayout pattern="${PATTERN_LAYOUT}" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" />
+				<SizeBasedTriggeringPolicy size="40 MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="20" />
+		</RollingRandomAccessFile>
+
+		<Async name="AsyncError">
+			<AppenderRef ref="error" />
+		</Async>
+	</Appenders>
+	<Loggers>
+		<Root level="debug">
+			<AppenderRef ref="Console" />
+			<!-- patten format %C{2} (%F:%L) output "?" when use AsyncAppender -->
+			<!-- use 
+			<AppenderRef ref="AsyncFile" />
+			<AppenderRef ref="AsyncError" /> 
+			-->
+			<AppenderRef ref="file" />
+			<AppenderRef ref="error" />
+		</Root>
+	</Loggers>
+</Configuration>
